@@ -1,4 +1,4 @@
-CORINTO V2<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
@@ -387,7 +387,6 @@ CORINTO V2<!DOCTYPE html>
 
     <!-- MÓDULO VENTAS -->
     <div id="modVentas" class="section-module active">
-      <!-- TARJETA CON SUMA TOTAL DE VENTAS (BLACK CARD) -->
       <div class="black-card">
         <div class="card-top-label">Suma Total de Ventas</div>
         <div class="card-balance-val" id="lblTotalVentasSuma" style="color: var(--accent-blue);">$0.00</div>
@@ -410,7 +409,7 @@ CORINTO V2<!DOCTYPE html>
           </div>
           <div class="field-group">
             <label>Cajero Responsable:</label>
-            <input type="text" id="vCajero" required placeholder="Nombre cajero">
+            <select id="vCajero" required></select>
           </div>
           <button type="submit" class="btn-submit venta">✔ Guardar Venta</button>
         </form>
@@ -555,7 +554,7 @@ CORINTO V2<!DOCTYPE html>
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    let datosSucursalLocal = { saldoAsignado: 3500.00, compras: [], ventas: [], agenda: [], proveedores: ["Distribuidora La Toñita", "Lácteos San Carlos"] };
+    let datosSucursalLocal = { saldoAsignado: 3500.00, compras: [], ventas: [], agenda: [], proveedores: ["Distribuidora La Toñita", "Lácteos San Carlos"], cajeros: ["Francisco", "María"] };
 
     db.collection('sucursales').doc(SUCURSAL_ACTIVA).onSnapshot(doc => {
       if (doc.exists) {
@@ -621,7 +620,7 @@ CORINTO V2<!DOCTYPE html>
       e.preventDefault();
       const metodo = document.getElementById('vMetodo').value;
       const monto = parseFloat(document.getElementById('vMonto').value) || 0;
-      const cajero = document.getElementById('vCajero').value.trim();
+      const cajero = document.getElementById('vCajero').value;
 
       const comision = metodo === 'tarjeta' ? (monto * 0.035) : 0;
       const neto = monto - comision;
@@ -645,10 +644,17 @@ CORINTO V2<!DOCTYPE html>
       const nuevaCompra = { id: Date.now(), fecha: new Date().toISOString(), proveedor, monto, factura };
       if(!datosSucursalLocal.compras) datosSucursalLocal.compras = [];
       datosSucursalLocal.compras.unshift(nuevaCompra);
+
+      // Sincronizar proveedor automáticamente si es nuevo
+      if(!datosSucursalLocal.proveedores) datosSucursalLocal.proveedores = [];
+      if(proveedor && !datosSucursalLocal.proveedores.includes(proveedor)) {
+        datosSucursalLocal.proveedores.push(proveedor);
+      }
+
       guardarEnNube();
 
       document.getElementById('formCajeroCompra').reset();
-      alert("¡Compra registrada!");
+      alert("¡Compra registrada y proveedor guardado!");
     }
 
     function agendarPedidoCajero(e) {
@@ -661,6 +667,12 @@ CORINTO V2<!DOCTYPE html>
       const nuevoPedido = { id: Date.now(), proveedor, monto, fechaProg: fecha, notas, estado: 'pendiente' };
       if(!datosSucursalLocal.agenda) datosSucursalLocal.agenda = [];
       datosSucursalLocal.agenda.push(nuevoPedido);
+
+      if(!datosSucursalLocal.proveedores) datosSucursalLocal.proveedores = [];
+      if(proveedor && !datosSucursalLocal.proveedores.includes(proveedor)) {
+        datosSucursalLocal.proveedores.push(proveedor);
+      }
+
       guardarEnNube();
 
       document.getElementById('formCajeroPedido').reset();
@@ -703,8 +715,8 @@ CORINTO V2<!DOCTYPE html>
       document.getElementById('lblNombreSucursal').innerText = SUCURSAL_ACTIVA.replace('_', ' ').toUpperCase();
       let sucData = datosSucursalLocal;
 
-      // 1. CÁLCULO DE SALDOS PARA COMPRAS
-      let saldoInicial = sucData.saldoAsignado || 3500.00;
+      // 1. CÁLCULO DE SALDOS PARA COMPRAS (Sincronizado con Firebase)
+      let saldoInicial = sucData.saldoAsignado !== undefined ? Number(sucData.saldoAsignado) : 3500.00;
       let totalComprasGeneral = (sucData.compras || []).reduce((acc, c) => acc + (c.monto || 0), 0);
       let saldoRestante = saldoInicial - totalComprasGeneral;
 
@@ -712,7 +724,16 @@ CORINTO V2<!DOCTYPE html>
       document.getElementById('lblSaldoRestante').innerText = `$${saldoRestante.toFixed(2)}`;
       document.getElementById('lblSaldoRestante').style.color = saldoRestante < 0 ? 'var(--red-btn)' : 'var(--green-corte)';
 
-      // 2. CÁLCULO DE VENTAS (Efectivo, Tarjeta Neto y Suma Total de Ventas)
+      // 2. RENDERIZAR SELECT DE CAJEROS SEGÚN FIREBASE
+      let cajerosList = sucData.cajeros || ["Cajero General"];
+      let selectCajero = document.getElementById('vCajero');
+      let cajeroActualSeleccionado = selectCajero.value;
+      selectCajero.innerHTML = cajerosList.map(c => `<option value="${c}">${c}</option>`).join('');
+      if(cajerosList.includes(cajeroActualSeleccionado)) {
+        selectCajero.value = cajeroActualSeleccionado;
+      }
+
+      // 3. CÁLCULO DE VENTAS
       let ventasList = sucData.ventas || [];
       let efecTot = ventasList.filter(v => v.metodoPago === 'efectivo').reduce((a, b) => a + b.total, 0);
       let tarjNetoTot = ventasList.filter(v => v.metodoPago === 'tarjeta').reduce((a, b) => a + b.montoNeto, 0);
@@ -731,7 +752,7 @@ CORINTO V2<!DOCTYPE html>
       document.getElementById('tablaVentasHoyBody').innerHTML = ventasHoy.map(v => `
         <tr>
           <td>${new Date(v.fecha).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</td>
-          <td><b>${v.metodoPago.toUpperCase()}</b> (${v.cajero})</td>
+          <td><b>${v.metodoPago.toUpperCase()}</b> (${v.cajero || 'General'})</td>
           <td style="color: ${v.metodoPago === 'tarjeta' ? 'var(--accent-blue)' : 'var(--green-corte)'}; font-weight: bold;">+$${(v.metodoPago === 'tarjeta' ? v.montoNeto : v.total).toFixed(2)}</td>
         </tr>
       `).join('') || '<tr><td colspan="3">Sin ventas registradas hoy.</td></tr>';
