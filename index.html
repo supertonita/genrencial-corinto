@@ -5,11 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Super Toñita - App de Caja y Operaciones</title>
   
-  <!-- PWA & Web App Manifest via Data URI para icono en Pantalla de Inicio -->
-  <link rel="manifest" href="data:application/manifest+json;utf8,%7B%22name%22%3A%22Super%20To%C3%B1ita%20Caja%22%2C%22short_name%22%3A%22To%C3%B1itaCaja%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%230f172a%22%2C%22theme_color%22%3A%22%230f172a%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22data%3Aimage%2Fsvg%2Bxml%3Butf8%2C%23svgView(viewBox(0%200%20512%20512))%253Csvg%2520xmlns%253D%2522http%253A%252F%252Fwww.w3.org%252F2000%252Fsvg%2522%2520width%253D%2522512%2522%2520height%253D%2522512%2522%253E%253Crect%2520width%253D%2522512%2522%2520height%253D%2522512%2522%2520rx%253D%2522110%2522%2520fill%253D%2522%25230f172a%22%2F%253E%253Cpath%2520d%253D%2522M160%2520190%2520h192%2520l-16%2520200%2520H176%2520Z%2522%2520fill%253D%2522none%2522%2520stroke%253D%2522%2523f59e0b%22%253E%253C%252Fsvg%2522%2C%22sizes%22%3A%22512x512%22%2C%22type%22%3A%22image%2Fsvg%2Bxml%22%7D%5D%7D">
+  <!-- PWA & Web App Manifest con el Icono Personalizado Incorporado -->
+  <link rel="manifest" href="data:application/manifest+json;utf8,%7B%22name%22%3A%22Super%20To%C3%B1ita%20Corinto%22%2C%22short_name%22%3A%22To%C3%B1ita%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%230f172a%22%2C%22theme_color%22%3A%22%230f172a%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22data%3Aimage%2Fsvg%2Bxml%3Butf8%2C%253Csvg%2520xmlns%253D%2522http%253A%252F%252Fwww.w3.org%252F2000%252Fsvg%2522%2520viewBox%253D%25220%25200%2520512%2520512%2522%253E%253Crect%2520width%253D%2522512%2522%2520height%253D%2522512%2522%2520rx%253D%2522110%2522%2520fill%253D%2522%25230f172a%2522%252F%253E%253Cpath%2520d%253D%2522M208%252070%2520h96%2520a20%252020%25200%25200%25201%252020%252020%2520v20%2520a10%252010%25200%25200%25201%2520-10%252010%2520h-116%2520a10%252010%25200%25200%25201%2520-10%2520-10%2520v-20%2520a20%252020%25200%25200%25201%252020%2520-20%2520z%2522%2520fill%253D%2522%252338bdf8%2522%252F%253E%253Cpath%2520d%253D%2522M120%2520110%2520h272%2520a24%252024%25200%25200%25201%252024%252024%2520v304%2520a24%252024%25200%25200%25201%2520-24%252024%2520h-272%2520a24%252024%25200%25200%25201%2520-24%2520-24%2520v-304%2520a24%252024%25200%25200%25201%252024%2520-24%2520z%2522%2520fill%253D%2522%252338bdf8%2522%252F%253E%253Cpath%2520d%253D%2522M256%2520160%2520c-44%25200%2520-70%252026%2520-70%252060%2520c0%252035%252025%252048%252060%252058%2520c24%25207%252032%252013%252032%252028%2520c0%252015%2520-13%252024%2520-35%252024%2520-23%25200%2520-40%2520-10%2520-46%2520-26%2520m10%2520-94%2520v24%2520m0%2520172%2520v26%2522%2520fill%253D%2522none%2522%2520stroke%253D%2522%25230f172a%2522%2520stroke-width%253D%252228%2522%2520stroke-linecap%253D%2522round%2522%252F%253E%253C%252Fsvg%253E%22%2C%22sizes%22%3A%22512x512%22%2C%22type%22%3A%22image%2Fsvg%2Bxml%22%7D%5D%7D">
   
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Toñita Corinto">
   <meta name="theme-color" content="#0f172a">
 
   <!-- Firebase SDKs -->
@@ -886,7 +887,6 @@
       document.getElementById('formCajeroPedido').reset();
       alert("¡Pedido agendado!");
       
-      // Ajustar la fecha a consultar en la pestaña recibir para ver el pedido creado inmediatamente
       document.getElementById('inputFechaRecibir').value = fecha;
       switchModulo('recibir');
     }
@@ -919,7 +919,6 @@
       let fechaSel = document.getElementById('inputFechaRecibir').value;
       let agenda = datosSucursalLocal.agenda || [];
       
-      // Filtrar asegurando comparación exacta de string de fecha 'YYYY-MM-DD'
       let filtrados = agenda.filter(p => p.fechaProg === fechaSel && p.estado === 'pendiente');
       
       const tbody = document.getElementById('tablaRecibirHoyBody');
